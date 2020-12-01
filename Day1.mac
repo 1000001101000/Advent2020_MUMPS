@@ -1,0 +1,33 @@
+ s inputcsv = "1713,1281,1185..."
+   
+ s inputlist = $LFS(inputcsv,",")
+ s size = $LL(inputlist)
+   
+ d task(2020,2) //problem1
+ d task(2020,3) //problem2
+
+task(target,count)
+ d worker(target,(count -1) ,0,1,1,0)
+ quit
+worker(target, depth, inadd, inmul, startfrom, curdepth) [inputlist,size]
+    {
+	    //new inadd,inmul,curdepth
+	    for i=startfrom:1:size
+	    {
+		    s curval = $LG(inputlist,i)
+		    if (curdepth=depth) && ((curval+inadd)=target)
+		    {
+			    w (inmul*curval),!
+			    quit
+		    }
+        
+		    if (curdepth < 2)
+			  {
+		    	do worker(target,depth,(inadd+curval) , (inmul*curval) , i+1, curdepth+1 )
+			  }
+	    } 
+    }
+ 
+ 
+ 
+ 
