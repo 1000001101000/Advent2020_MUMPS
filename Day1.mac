@@ -21,10 +21,10 @@ worker(target, depth, inadd, inmul, startfrom, curdepth) [inputlist,size]
 			    quit
 		    }
         
-		    if (curdepth < 2)
-			  {
+		    if (curdepth < depth)
+		    {
 		    	do worker(target,depth,(inadd+curval) , (inmul*curval) , i+1, curdepth+1 )
-			  }
+		    }
 	    } 
     }
  
