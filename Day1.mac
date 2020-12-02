@@ -2,6 +2,14 @@
    
  s inputlist = $LFS(inputcsv,",")
  s size = $LL(inputlist)
+ 
+ //sort list so that we can search faster than iteration?
+ //more like load into binary search tree to begin with, that is what MUMPS is good for after all
+ //calculating correct value and searching via binary search sounds smart
+ //could also short circut for loop once values get too big.
+ 
+ //would be interesting to try it out in the real world and figure out where different methods actually lead to gains.
+ //cpu cache/etc will make linear traversal counter-intuitively fast compared to btree up to a point.
    
  d task(2020,2) //problem1
  d task(2020,3) //problem2
@@ -21,6 +29,8 @@ worker(target, depth, inadd, inmul, startfrom, curdepth) [inputlist,size]
 			    quit
 		    }
         
+	            //add short circut criteria?
+		    //for if total is already > target there's no reason to keep adding values (assuming all values positive!)
 		    if (curdepth < depth)
 		    {
 		    	do worker(target,depth,(inadd+curval) , (inmul*curval) , i+1, curdepth+1 )
