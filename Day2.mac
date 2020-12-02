@@ -1,0 +1,80 @@
+ s inputcsv="14-15 v: vdvvvvvsvvvvvfpv, ..."
+ 
+ s inputlist = $LFS(inputcsv,",")
+ s inputsize = $LL(inputlist)
+ 
+ s validcount1=0
+ s validcount2=0
+ 
+ for i=1:1:inputsize
+ {
+	 s password=$LG(inputlist,i)
+	 s validcount1=validcount1 + $$validate(password,1)
+	 s validcount2=validcount2 + $$validate(password,2)
+ }
+ w validcount1,!
+ w validcount2,!
+
+charcount(instr, inchar)
+  if $L(inchar) '= 1
+  {
+	  return 0
+  }
+  
+  s size=$L(instr)
+  s count=0
+  
+  for j=1:1:size
+  {
+	if $E(instr, j,j)=inchar
+	{
+		s count=count+1
+	} 
+  }
+  return count
+  quit
+  
+ 
+validate(instr,mode)
+ s rule=$P(instr,":",1)
+ s range=$P(rule," ",1)
+ 
+ s text=$P(instr,":",2)
+ //assume leading space isn't part of the password and remove it
+ s text=$P(text," ",2)
+ 
+ s char=$P(rule," ",2)
+ s min=$P(range,"-",1)
+ s max=$P(range,"-",2)
+ 
+ s pos1=min
+ s pos2=max
+ 
+ if mode=1
+ {
+ 	s count=$$charcount(text,char)
+ 
+ 	if (count >= min) && (count <= max)
+ 	{
+    	return 1 
+ 	}
+ 	else
+ 	{
+		return 0	 
+ 	}
+ }
+ 
+ if mode=2
+ {
+	 //re-using charcount from solution1 fast to write though there are better ways
+	 //could condense to xor one-liner, but that would be even uglier	 
+	 if ($$charcount($E(text, pos1,pos1),char) + $$charcount($E(text, pos2,pos2),char))=1
+	 {
+		 return 1
+	 }
+	 else
+	 {
+		 return 0
+	 }
+ }
+ return 0
