@@ -24,6 +24,9 @@ slopecheck(slopex,slopey)
  
  for i=y:slopey:inputsize
  {
+ 	 //modulus was not handling the edge case of x=1 for some reason. ...i mean... the reason being values starting at 1 rather than 0
+	 //but just adding 1 failed to fix it properly. 
+	 //presumably this is cleaner than adding a bunch of offsets to calculate 0-based just so i get to use modulus
 	 if (x>width)
 	 {
 		 s x=x-width
