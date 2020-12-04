@@ -1,0 +1,117 @@
+ s inputcsv="byr:1985,eyr:2021 iyr:2011 hgt:175cm pid:163069444 hcl:#18171d,..."
+ 
+ s inputlist = $LFS(inputcsv,",")
+ s inputsize = $LL(inputlist)
+ 
+ s linecount=1
+ s recordcount=0
+ s validcount1=0
+ s validcount2=0
+ 
+ k tmpglo
+ s tmpglo("byr")=""
+ s tmpglo("iyr")=""
+ s tmpglo("eyr")=""
+ s tmpglo("hgt")=""
+ s tmpglo("hcl")=""
+ s tmpglo("ecl")=""
+ s tmpglo("pid")=""
+ 
+ while (linecount <= inputsize)
+ {
+	s tmpline=$LG(inputlist,linecount)
+	s linecount = linecount + 1
+	if tmpline=""
+	{
+		s recordcount= recordcount + 1
+		if (tmpglo("byr")'="") && (tmpglo("iyr")'="") && (tmpglo("eyr")'="") && (tmpglo("hgt")'="") && (tmpglo("hcl")'="") && (tmpglo("ecl")'="") && (tmpglo("pid")'="")
+		{
+			s validcount1=validcount1+1
+		}
+		
+		if ($$byr(tmpglo("byr"))) && ($$iyr(tmpglo("iyr"))) && ($$eyr(tmpglo("eyr"))) && ($$hgt(tmpglo("hgt"))) && ($$hcl(tmpglo("hcl"))) && ($$ecl(tmpglo("ecl"))) && ($$pid(tmpglo("pid")))
+		{
+			s validcount2=validcount2+1
+		}
+		s tmpglo("byr")=""
+ 		s tmpglo("iyr")=""
+ 		s tmpglo("eyr")=""
+ 		s tmpglo("hgt")=""
+ 		s tmpglo("hcl")=""
+ 		s tmpglo("ecl")=""
+ 		s tmpglo("pid")=""
+		continue
+	}
+	
+	s tmplist=$LFS(tmpline," ")
+	s tmpsize=$LL(tmplist)
+	for i=1:1:tmpsize
+	{
+		s tmppair=$LG(tmplist,i)
+		s tmpglo($P(tmppair,":",1))=$P(tmppair,":",2)
+	}
+	  
+ }
+  w validcount1,!
+  w validcount2,!
+  
+byr(input)
+ if (input >= 1920) && (input <= 2002)
+ {
+	 return 1
+ }
+ else
+ {
+	 return 0
+ }
+iyr(input)
+ if (input >= 2010) && (input <= 2020)
+ {
+	 return 1
+ }
+ else
+ {
+	 return 0
+ }
+eyr(input)
+ if (input >= 2020) && (input <= 2030)
+ {
+	 return 1
+ }
+ else
+ {
+	 return 0
+ }
+hgt(input)
+ s value=$E(input,1,*-2)
+ s units=$E(input,*-1,*)
+ if (units="cm") && (value >= 150) && (value <= 193)
+ {
+	 return 1
+ }
+ if (units="in") && (value >= 59) && (value <= 76)
+ {
+	 return 1
+ }
+ return 0
+hcl(input)
+ if ($E(input,1,1)="#") && ($L(input)=7) && ($ZSTRIP(input,"*N","abcdef")="#")
+ {
+	 return 1
+ }
+ return 0
+ecl(input)
+ //ick
+ if (input="amb") ||(input="blu") ||(input="brn") ||(input="gry") ||(input="grn") || (input="hzl") ||(input="oth")
+ {
+	 return 1
+ }
+ return 0
+pid(input)
+ //lol
+ if ($L(input)=9) && ($ZSTRIP(input,"*N")="")
+ {
+	 return 1
+ }
+ return 0
+ 
