@@ -1,0 +1,60 @@
+ s inputcsv="FBFBBFFRLR"
+ 
+ s inputlist = $LFS(inputcsv,",")
+ s inputsize = $LL(inputlist)
+ 
+ 
+ s highest1=0
+ 
+ for x=1:1:(128*8)
+ {
+ 	s seatglo(x)="0"
+ }
+ 
+ for i=1:1:inputsize
+ {
+	 s line=$LG(inputlist,i)
+	 s row=$E(line,1,7)
+	 s col=$E(line,8,10)
+	 
+	 s rownum=0
+	 
+	 for j=7:-1:1
+	 {
+		 if $E(row,j,j)="B"
+		 {
+			 s rownum=rownum+$ZPOWER(2,7-j)
+		 }
+	 }
+	 
+	 s seatnum=0
+	 
+	 for j=3:-1:1
+	 {
+		 if $E(col,j,j)="R"
+		 {
+			 s seatnum=seatnum+$ZPOWER(2,3-j)
+		 }
+	 }
+	 s id=rownum*8+seatnum
+	 s seatglo(id)="1"
+	 
+	 if (id>highest1) 
+	 {
+		 s highest1=id
+	 }
+ }
+ w highest1,!
+ 
+ //avoid edge case of first seat by starting at 2
+ //puzzle says the first and last seats shouldn't ocunt anyway.
+ for x=2:1:(128*8)
+ {
+	 if (seatglo(x)="0") && (seatglo(x-1)="1") && (seatglo(x+1)="1")
+	 {
+		 w x,!
+		 quit
+	 }
+ }
+ 
+ 
