@@ -1,0 +1,61 @@
+s inputcsv="tzibqaulrw,bratip,..."
+ 
+ s inputlist = $LFS(inputcsv,",")
+ s inputsize = $LL(inputlist)
+ 
+ s linecount=1
+ s recordcount=0
+
+ s total1=0
+ s total2=0
+ 
+ s qglo=""
+ s members=0
+ 
+ while (linecount <= inputsize)
+ {
+	s tmpline=$LG(inputlist,linecount)
+	s linecount = linecount + 1
+	if tmpline=""
+	{
+		s recordcount= recordcount + 1
+		
+		s grouptotal=0
+		s grouptotal2=0
+		s key=$O(qglo(""))
+		
+		while (key'="")
+		{
+			s grouptotal=grouptotal+1
+			if (qglo(key)=members) s grouptotal2=grouptotal2+1
+			s key=$O(qglo(key))
+		}
+		
+		s total1=total1+grouptotal
+		s total2=total2+grouptotal2
+		
+		k qglo
+		s qglo=""
+		s members=0
+		continue
+	}
+	
+	
+	s tmplen=$L(tmpline)
+	
+	for i=1:1:tmplen
+	{
+		s tmpchar=$E(tmpline,i,i)
+		if ($D(qglo(tmpchar))>0)
+		{
+			s qglo(tmpchar)=qglo(tmpchar)+1
+		}
+		else
+		{
+			s qglo(tmpchar)=1
+		}
+	}
+	s members=members+1
+ } 
+ w total1,!
+ w total2,!
