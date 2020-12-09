@@ -1,0 +1,57 @@
+ s file = ##class(%File).%New( "~/adv9.txt" )
+ 
+ s sc = file.Open( "R" ) 
+
+ s inputsize=0
+ s inputlist=""
+ 
+ 
+ while 'file.AtEnd
+ {
+	s inputsize=inputsize+1
+	s inputlist(inputsize)=file.ReadLine()
+ }
+ d file.Close()
+ 
+ for i=26:1:inputsize
+ {
+	 s valid=0
+	 s ivalue=inputlist(i)
+
+	 for x=(i-25):1:(i-1)
+	 {
+		 s xvalue=inputlist(x)
+		 for y=(i-25):1:(i-1)
+		 {
+			 s yvalue=inputlist(y)
+			 if (xvalue'=yvalue) && ((xvalue+yvalue)=ivalue)
+			 {
+				s valid=1
+			 } 
+		 }
+	 } 
+	 if valid=0 q 
+ }
+ 
+ w ivalue,!
+ 
+ for starting=1:1:inputsize
+ {
+	 s tmpval=0
+	 s min=9999999999
+	 s max=0
+	 for z=starting:1:inputsize
+	 {
+		 s tmp=inputlist(z)
+		 if (tmp<min) s min=tmp
+		 if (tmp>max) s max=tmp
+		 s tmpval=tmpval+tmp
+		 if (tmpval=ivalue) w min+max,! q
+		 if (tmpval>ivalue) q
+	 }
+	 if (tmpval=ivalue) q
+ }
+
+
+ 
+ 
