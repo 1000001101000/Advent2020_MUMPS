@@ -1,0 +1,67 @@
+s inputcsv = "jmp +265,jmp +326,..."
+ s inputlist = $LFS(inputcsv,",")
+ s size = $LL(inputlist)
+ 
+ w $P($$test(0),",",2),!
+ 
+ for x=0:1:size
+ {
+	 s tmp=$$test(x)
+	 if ($P(tmp,",",1)="0") w $P(tmp,",",2),! q
+ }
+ 
+test(swap)
+ new pc,oldpc,acc,visited
+ s pc=1
+ s oldpc=1
+ s acc=0
+ 
+ s visited=""
+ 
+ while (pc < size)
+ {
+	 if ($D(visited(pc)))
+	 {
+		 return ("1,"_acc)
+		 quit
+	 }
+	 else
+	 {
+		 s visited(pc)=""
+	 }
+	 
+	 s tmpline=$LG(inputlist,pc)
+	 s inst=$P(tmpline," ",1)
+	 s val=$P(tmpline," ",2)
+	 
+	 if (pc=swap)
+	 {
+		 if (inst="nop")
+		 {
+			 s inst="jmp"
+		 }
+		 else
+		 {
+			 if (inst="jmp") s inst="nop" 
+		 }
+	 }
+	 
+	 if (inst="acc")
+	 {
+		 s acc=acc+val
+	 }
+	 
+	 s oldpc=pc
+	 if (inst="jmp")
+	 {
+		 s pc=pc+val
+	 }
+	 else
+	 {
+	 	s pc=pc+1
+	 }
+ }
+ return ("0,"_acc)
+ 
+ 
+ 
