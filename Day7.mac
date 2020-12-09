@@ -1,0 +1,80 @@
+ s file = ##class(%File).%New( "~/adv7.txt" )
+ 
+ s sc = file.Open( "R" ) 
+
+ s inputsize=0
+ s data=""
+ s rkey=""
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+
+	s inputsize=inputsize+1 
+	
+	s bagcolor=$P(tmpline," bags contain ",1)
+	s data(bagcolor)=""
+	
+	s inner=$LFS($P(tmpline," bags contain ",2),", ")
+	
+	s inside=0
+	
+	for x=1:1:$LL(inner)
+	{
+		s tmpstr=$LG(inner,x)
+		s tmpstr=$REPLACE(tmpstr," bags","")
+		s tmpstr=$REPLACE(tmpstr," bag","")
+		s tmpstr=$REPLACE(tmpstr,".","")
+		
+		s num=$P(tmpstr," ",1)
+		s incolor=$E(tmpstr,$L(num)+2,$L(tmpstr))
+		
+		if (tmpstr="no other") continue
+		s data(bagcolor,incolor)=num
+	}
+ }
+ d file.Close()
+ 
+ s change=1
+ s total1=0
+ s puzzle1=""
+ 
+ while (change'=0)
+ {
+	 s change=0
+	 s key = $O(data(""))
+	 
+	 while (key'="")
+	 {
+		 if ($D(puzzle1(key))) s key=$O(data(key)) continue
+		 if ($D(data(key,"shiny gold"))) s puzzle1(key)="1" s total1=total1+1 s change=1 s key = $O(data(key)) continue
+		 
+		 s child = $O(data(key,""))
+		 while (child'="")
+		 {
+			 if ($D(puzzle1(child))) s puzzle1(key)="1" s total1=total1+1 s change=1 q
+			 s child = $O(data(key,child))
+		 }
+		 s key = $O(data(key))
+	 }	 
+ }
+ w total1,!
+ 
+ w $$count("shiny gold"),!
+ 
+count(node) [data]
+{
+	s rkey=$O(data(node,""))
+	if (rkey="") return 0 
+	s tmpcount=0
+	while (rkey'="")
+	{
+		s tmpcount=tmpcount+(data(node,rkey)*$$count(rkey))+data(node,rkey)
+		s rkey = $O(data(node,rkey))
+	}
+	return tmpcount
+}
+ 
+
+ 
