@@ -1,0 +1,75 @@
+ s file = ##class(%File).%New( "~/adv11.txt" )
+ s sc = file.Open( "R" ) 
+
+ s inputsize=0
+ s seats=""
+ s workseats=""
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	s inputsize=inputsize+1 
+	s linesize=$L(tmpline)
+	for x=1:1:linesize
+	{
+		s seats(x,inputsize)=$E(tmpline,x,x)
+	}	
+ }
+ 
+ w $$simulate(1,4),!
+ w $$simulate(999,5),!
+
+adjcount(a,b,depth) [workseats]
+{
+	s count=0
+	
+	for xoff=-1:1:1
+	{
+		for yoff=-1:1:1
+		{
+			if (xoff=0) && (yoff=0) continue
+			for z=1:1:depth
+			{
+				if ('$D(workseats(a+(xoff*z),b+(yoff*z)))) quit
+				if (workseats(a+(xoff*z),b+(yoff*z))=".") continue
+				if (workseats(a+(xoff*z),b+(yoff*z))="#") s count=count+1 quit
+				if (workseats(a+(xoff*z),b+(yoff*z))="L") quit
+			}
+		}
+	}
+	return count
+}
+
+simulate(sightdepth,threshold) [seats,inputsize,linesize,workseats]
+{
+ k tmpseats
+ k workseats
+ m workseats=seats
+ m tmpseats=workseats
+ 
+ s change=1
+ while (change'=0)
+ {
+	 s change=0
+	 for y=1:1:inputsize
+	 {
+		for x=1:1:linesize
+		{
+			if (workseats(x,y)=".") continue
+			if (workseats(x,y)="L") && ($$adjcount(x,y,sightdepth)=0) s tmpseats(x,y)="#" s change=1 continue
+			if (workseats(x,y)="#") && ($$adjcount(x,y,sightdepth)>=threshold) s tmpseats(x,y)="L" s change=1 continue
+		} 
+	 }
+	 m workseats=tmpseats
+ }
+ s result=0
+ for y=1:1:inputsize
+ {
+ 	for x=1:1:linesize
+	{
+		if (workseats(x,y)="#") s result=result+1
+	}
+ }
+ return result
+}
