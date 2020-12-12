@@ -1,65 +1,49 @@
- //this could be consolidated into 1 while loop
- //and generally cleaned up but I'm tired.
- 
- s file = ##class(%File).%New( "~/adv12.txt" )
- s sc = file.Open( "R" ) 
 
- s inputsize=0
- s heading=90
- s npos=0
- s epos=0
- 
- while 'file.AtEnd
- {
-	s tmpline=file.ReadLine()
-	if tmpline="" continue
-	s inputsize=inputsize+1 
-	
-	s action=$E(tmpline,1,1)
-	s amount=$E(tmpline,2,*)
-	
-	if (action="L") s heading=heading-amount
-	if (action="R") s heading=heading+amount
-	
-	if (heading>=360) s heading=heading-360
-	if (heading<0) s heading=heading+360
-	
-	if (action="F") && (heading=0) s action="N"
-	if (action="F") && (heading=90) s action="E"
-	if (action="F") && (heading=180) s action="S"
-	if (action="F") && (heading=270) s action="W"
-	
-	if (action="N") s npos=npos+amount continue
-	if (action="S") s npos=npos-amount continue
-	if (action="E") s epos=epos+amount continue
-	if (action="W") s epos=epos-amount continue
-	
- }
- d file.Close()
-
- s distance=$ZABS(epos)+$ZABS(npos)
- w distance,!
-
- s epos=10
- s npos=1
- s eship=0
- s nship=0
- 
+ s inputsize=0 
+ s data="" 
  s file = ##class(%File).%New( "~/adv12.txt" )
  s sc = file.Open( "R" )
- while 'file.AtEnd
+ 
+ while 'file.AtEnd 
  {
 	s tmpline=file.ReadLine()
 	if tmpline="" continue
-	s inputsize=inputsize+1 
+	s inputsize=inputsize+1
+	s data(inputsize)=tmpline
+ }
+ d file.Close()
+ s data=inputsize
+ 
+ w $$puzzle(1,1,0),!
+ w $$puzzle(2,10,1),!
+ 
+puzzle(puzzlenum,epos,npos) [data]
+{
+ s eship=0
+ s nship=0
+
+ for a=1:1:data 
+ {
+	s tmpline=data(a)
+	if tmpline="" continue
 	
 	s action=$E(tmpline,1,1)
 	s amount=$E(tmpline,2,*)
 	
-	if (action="N") s npos=npos+amount continue
-	if (action="S") s npos=npos-amount continue
-	if (action="E") s epos=epos+amount continue
-	if (action="W") s epos=epos-amount continue
+	if (puzzlenum=1)
+	{
+		if (action="N") s nship=nship+amount continue
+		if (action="S") s nship=nship-amount continue
+		if (action="E") s eship=eship+amount continue
+		if (action="W") s eship=eship-amount continue
+	}
+	else
+	{
+		if (action="N") s npos=npos+amount continue
+		if (action="S") s npos=npos-amount continue
+		if (action="E") s epos=epos+amount continue
+		if (action="W") s epos=epos-amount continue
+	}
 	
 	if (action="F") s eship=eship+(amount*epos) s nship=nship+(amount*npos) continue
 	
@@ -73,5 +57,6 @@
 		s tmp=npos s npos=0-epos s epos=tmp continue
 	}
  }
- d file.Close()
- w $ZABS(eship)+$ZABS(nship),!
+ return $ZABS(eship)+$ZABS(nship)
+	
+}
