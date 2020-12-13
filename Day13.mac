@@ -1,0 +1,50 @@
+
+ //in need of more cleanup than usual
+ 
+ s inputcsv="29,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,37,x,x,x,x,x,631,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,13,19,x,x,x,23,x,x,x,x,x,x,x,383,x,x,x,x,x,x,x,x,x,41,x,x,x,x,x,x,17"
+ s inputtime="1000507"
+ 
+ s inputlist = $LFS(inputcsv,",")
+ s inputsize = $LL(inputlist)
+ 
+ s width=$L($LG(inputlist,1))
+ 
+ s done=0
+ s x=inputtime
+ while (done=0)
+ {
+	 for y=1:1:inputsize
+	 {
+		s tmpval = $LG(inputlist,y)
+ 	 	if (tmpval="x") continue
+ 	 	if (x#tmpval=0) w tmpval*(x-inputtime),! s done=1
+	 }
+	 s x=x+1
+ }
+ 
+ for x=1:1:inputsize
+ {
+	 s tmpval = $LG(inputlist,x)
+	 if (tmpval="x") continue
+	 s data(x-1)=tmpval
+ }
+ 
+ s x=1
+ s mult=1
+ s starttime=$P($h,",",2)
+ while (1=1)
+ {
+	s key=$O(data(""))
+	s good=1
+	while (key'="")
+ 	{
+	 	s div=data(key)
+	 	s mod=key
+	 	if (((x+mod)#div)'=0) s good=0 quit
+	 	if (mult#div'=0) s mult=mult*div
+		s key=$O(data(key)) 	
+ 	}
+ 	if (good=1) w x,! quit 
+	s x=x+(1*mult)
+ }
+ s endtime=$P($h,",",2)
