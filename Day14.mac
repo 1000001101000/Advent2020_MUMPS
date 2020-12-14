@@ -1,0 +1,87 @@
+ s file = ##class(%Library.File).%New( "~/adv14.txt" )
+ s sc = file.Open( "R" ) 
+ s inputsize=0
+
+ s ormask=0
+ s andmask=$ZPOWER(2,36)-1
+ s memory=""
+ s floaters=""
+ s memory2=""
+
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	s inputsize=inputsize+1 
+	
+	s cmd=$P(tmpline," = ",1)
+	s data=$P(tmpline," = ",2)
+	
+	if (cmd="mask")
+	{
+		k floaters
+		s tmpor=0
+		s tmpand=$ZPOWER(2,36)-1
+		s size=$L(data)
+		for x=size:-1:1
+		{
+			s bit=$E(data,x,x)
+			s exp=$ZPOWER(2,size-x)
+			if (bit="X") s floaters(exp)="" continue
+			if (bit="0") s tmpand=tmpand - exp
+			if (bit="1") s tmpor=tmpor + exp
+		}
+		s ormask=tmpor
+		s andmask=tmpand
+	}
+	else
+	{
+		s addr=$REPLACE(cmd,"mem[","")
+		s addr=$REPLACE(addr,"]","")
+		
+		//puzzle1
+		s value=$ZB(data+0,ormask+0,7)
+		s value=$ZB(value+0,andmask+0,1)
+		s memory(addr)=value
+		
+		//puzzle2
+		s addr2=$ZB(addr+0,ormask+0,7)
+		d recurse(addr2,$O(floaters("")),data)
+	}
+		
+ }
+ d file.Close()
+ 
+ s sum=0
+ s key=$O(memory(""))
+ while (key'="")
+ {
+	 s sum=sum+memory(key)
+	 s key=$O(memory(key))
+ }
+ w sum,!
+ 
+ s sum=0
+ s key=$O(memory2(""))
+ while (key'="")
+ {
+	 s sum=sum+memory2(key)
+	 s key=$O(memory2(key))
+ }
+ w sum,!
+ 
+recurse(baseaddress,bit,value) [memory2,floaters]
+{
+	s inv=($ZPOWER(2,36)-1)-bit
+	s andaddy=$ZB(baseaddress+0,inv,1)
+	s oraddy=$ZB(baseaddress+0,bit+0,7)
+	
+	s memory2(andaddy)=value
+	s memory2(oraddy)=value
+	
+	s next=$O(floaters(bit))
+	if (next="") quit
+	
+	d recurse(andaddy,next,value)
+	d recurse(oraddy,next,value)
+}
