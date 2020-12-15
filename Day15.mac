@@ -1,0 +1,51 @@
+ //might need to bump the per-process memory setting higher than the default
+ s inputcsv = "16,11,15,0,1,7"
+ 
+ w $$process(inputcsv,2020),!
+ w $$process(inputcsv,30000000),!
+ 
+process(inputcsv,iterations)
+{
+ 	s inputlist = $LFS(inputcsv,",")
+ 	s size = $LL(inputlist)
+ 
+ 	k data
+ 	s lastnum=0
+ 	s lastinst=0 
+ 
+	for i=1:1:size
+	{
+		s num=$LG(inputlist,i)
+		s data(num)=i
+		s lastnum=num
+	}
+
+	for i=size+1:1:iterations
+ 	{
+		s lastnuminst=data(lastnum)
+		s lastinst=$P(lastnuminst,"|",1)
+		s previnst=$P(lastnuminst,"|",2)
+	 	
+		if (previnst="")
+		{
+			s curnum=0
+		}
+		else
+		{
+			s curnum=lastinst-previnst
+		}
+	 	
+		if ($D(data(curnum)))
+		{
+			s data(curnum)=i_"|"_$P(data(curnum),"|",1)
+		}
+		else
+		{
+			s data(curnum)=i
+		}
+		 
+		s lastnum=curnum
+	}
+	k data
+	return lastnum
+}
