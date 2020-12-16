@@ -1,0 +1,172 @@
+
+ s file = ##class(%Library.File).%New( "~/adv16.txt" )
+ s sc = file.Open( "R" ) 
+ s inputsize=0
+ 
+ //undoubtedly there is a lot of cleanup that could happen here
+ 
+ s field=""
+ k fields
+ k nearby
+ s ticketcnt=0
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	
+	s tmpfield=$P(tmpline,":",1)
+	if ($P(tmpline,",",2)="")
+	{
+		s field=tmpfield
+		s values=$P(tmpline,": ",2)
+		if (values'="")
+		{
+			s values=$REPLACE(values," or ","-")
+			s values=$REPLACE(values," ","")
+			s fields(field,"min1")=$P(values,"-",1)
+			s fields(field,"max1")=$P(values,"-",2)
+			s fields(field,"min2")=$P(values,"-",3)
+			s fields(field,"max2")=$P(values,"-",4)
+		}
+	}
+	else
+	{
+		if (field="your ticket")
+		{
+			s myticket=tmpline
+		}
+		if (field="nearby tickets")
+		{
+			s ticketcnt=ticketcnt+1
+			s nearby(ticketcnt)=$LFS(tmpline,",")
+			
+		}
+	}
+	s inputsize=inputsize+1 	
+ }
+ 
+ d file.Close()
+ 
+ k invalid
+ for x=0:1:1000
+ {
+	 s valid=0
+	 s key=$O(fields(""))
+	 while (key'="")
+	 {
+		 if ((x>=fields(key,"min1")) && (x<=fields(key,"max1"))) || ((x>=fields(key,"min2")) && (x<=fields(key,"max2")))
+		 {
+			 s valid=1
+			 quit	 
+		 }
+		 s key=$O(fields(key))
+	 }
+	 if (valid=0) s invalid(x)=""
+ }
+ 
+ s puzzle1=0
+ s validcnt=0
+ for x=1:1:ticketcnt
+ {
+	 s bad=0
+	 s key=$O(invalid(""))
+	 while (key'="")
+	 {
+		 if ($LF(nearby(x),key)'=0) s bad=1 s puzzle1=puzzle1+key
+		 s key=$O(invalid(key))
+	 }
+	 if (bad=0) s validcnt=validcnt+1 m validtickets(validcnt)=nearby(x) 
+ }
+ w puzzle1,!
+ 
+ s key=$O(fields(""))
+ s size=$LL(validtickets(1))
+ while (key'="")
+ {
+	 //w key,": "
+	 for x=1:1:size
+	 {
+		 for y=1:1:validcnt
+	 	 {
+		 	s tmpval=$LG(validtickets(y),x)
+		 	if ((tmpval>=fields(key,"min1")) && (tmpval<=fields(key,"max1"))) || ((tmpval>=fields(key,"min2")) && (tmpval<=fields(key,"max2")))
+		 	{
+			 	
+		 	}
+		 	else
+		 	{
+				 s fields(key,"NP",x)=""
+		 	}
+		 
+	 	}
+	 }
+	 s possible=""
+	 for x=1:1:size
+	 {
+		 if ($D(fields(key,"NP",x))=0)
+		 {
+			 s possible=possible_","_x
+		 }
+		 else
+		 {
+			 k fields(key,"NP",x)
+		 }
+	 }
+	 s $E(possible,1,1)=""
+	 s possible=$LFS(possible)
+	 s fields(key,"possible")=possible
+	 s key=$O(fields(key))
+ }
+ 
+ s change=1
+ while change'=0
+ {
+ 	s change=0
+ 	
+ s key=$O(fields(""))
+ while(key'="")
+ {
+	 if ($D(fields(key,"possible"))=0) s key=$O(fields(key)) continue
+	 set found=""
+	 set tmplist=fields(key,"possible")
+	 if ($LL(tmplist)=1)
+	 {
+		 s found=$LG(tmplist,1)
+		 s fields(key,"num")=found
+		 k fields(key,"possible")
+		 quit
+		
+	 }
+	 s key=$O(fields(key))
+ }
+ 
+ s key=$O(fields(""))
+ while(key'="")
+ {
+	 if ($D(fields(key,"possible"))=0)  s key=$O(fields(key)) continue
+	 
+	 set tmplist=fields(key,"possible")
+	 s tmpsearch=$LF(tmplist,found)
+	 if (tmpsearch'=0)
+	 {
+		 s $LIST(fields(key,"possible"),tmpsearch,tmpsearch)="" 
+		 s change=1
+	 }
+	 
+	 s key=$O(fields(key)) 
+ }
+
+ }
+ 
+ s puzzle2=1
+ 
+ s puzzle2=puzzle2 * $P(myticket,",",fields("departure location","num"))
+ s puzzle2=puzzle2 * $P(myticket,",",fields("departure station","num"))
+ s puzzle2=puzzle2 * $P(myticket,",",fields("departure platform","num"))
+ s puzzle2=puzzle2 * $P(myticket,",",fields("departure track","num"))
+ s puzzle2=puzzle2 * $P(myticket,",",fields("departure date","num"))
+ s puzzle2=puzzle2 * $P(myticket,",",fields("departure time","num"))
+ 
+ w puzzle2,!
+
