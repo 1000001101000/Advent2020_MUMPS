@@ -1,0 +1,139 @@
+ s file = ##class(%Library.File).%New( "~/adv17.txt" )
+ s sc = file.Open( "R" ) 
+ 
+ //seriously considering some more rework, we'll see
+
+ s inputsize=0
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue 
+	s linesize=$L(tmpline)
+	for x=1:1:linesize
+	{
+		s hcube(0,0,inputsize,x-1)=$E(tmpline,x,x)
+	}	
+	s inputsize=inputsize+1
+ }
+ d file.Close()
+ 
+ k workcube
+ m workcube=hcube
+ 
+ w $$process(3,6),!
+ 
+ k workcube
+ m workcube=hcube
+ w $$process(4,6),!
+
+process(depth,count) [workcube,input]
+{
+	
+	s key=$O(workcube(0,0,""))
+	s ysize=0
+	while(key'="")
+	{
+		s ysize=ysize+1
+		s key=$O(workcube(0,0,key))
+	}
+	
+	s key=$O(workcube(0,0,0,""))
+	s xsize=0
+	while(key'="")
+	{
+		s xsize=xsize+1
+		s key=$O(workcube(0,0,0,key))
+	}
+
+ m tmpcube=workcube
+ 
+ //lol replace with recursize solution? or is there some other way for n-depth?
+ for cycle=1:1:count
+ {
+	 if (depth=4)
+	 {
+		 s wstart=0-cycle
+		 s wend=cycle
+	 }
+	 else
+	 {
+		s wstart=0
+		s wend=0
+	 }
+	  
+	 for w=wstart:1:wend
+	 {
+	 for z=0-cycle:1:cycle
+	 {
+		 for y=0-cycle:1:ysize+cycle-1
+	 	 {
+		 	for x=0-cycle:1:xsize+cycle-1
+	 		{
+		 		if ('$D(workcube(w,z,y,x))) s workcube(w,z,y,x)="." s tmpcube(w,z,y,x)="."
+		 		s tmpcnt=$$adjcount(x,y,z,w)
+		 		s current=workcube(w,z,y,x)
+		 		if ((current="#") && (tmpcnt'=2) && (tmpcnt'=3)) s tmpcube(w,z,y,x)="."
+		 		if ((current=".") && (tmpcnt=3)) s tmpcube(w,z,y,x)="#"
+	 		}
+	 	 }
+	 }
+	 }
+	 m workcube=tmpcube
+ }
+ 
+ m input=workcube
+ 
+ s count=0
+ s wkey=$O(input(""))
+ while (wkey'="")
+ {	
+ 	s zkey=$O(input(wkey,""))
+ 	while (zkey'="")
+ 	{
+	 s ykey=$O(input(wkey,zkey,""))
+	 while (ykey'="")
+	 {
+		 s xkey=$O(input(wkey,zkey,ykey,""))
+		 while (xkey'="")
+		 {
+			 s tmpval=input(wkey,zkey,ykey,xkey)
+			 if tmpval="#" s count=count+1
+			 s xkey=$O(input(wkey,zkey,ykey,xkey))
+		 }
+		 s ykey=$O(input(wkey,zkey,ykey))
+	 }
+	 s zkey=$O(input(wkey,zkey))
+ }
+ s wkey=$O(input(wkey))
+ }
+ return count
+	
+}
+
+ //probably a better (recursize) way for this too.
+ //...if i'd written it for day 11 i'd have had it today. wonder if it will come up again. 
+adjcount(x,y,z,w) [workcube]
+{
+	s count=0
+	s active="#"
+	
+	for woff=-1:1:1
+	{
+		for zoff=-1:1:1
+		{
+			for yoff=-1:1:1
+			{
+				for xoff=-1:1:1
+				{
+					if ((xoff=0) && (yoff=0) && (zoff=0) && (woff=0)) continue
+					if ('$D(workcube((w+woff),(z+zoff),(y+yoff),(x+xoff)))) continue
+					s tmppoint=workcube((w+woff),(z+zoff),(y+yoff),(x+xoff))
+					if (tmppoint="#") s count=count+1
+				}
+			}
+		}
+	}
+	return count
+}
+
