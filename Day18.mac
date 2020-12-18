@@ -1,0 +1,162 @@
+
+ s file = ##class(%Library.File).%New( "~/adv18.txt" )
+ s sc = file.Open( "R" ) 
+ 
+ s inputsize=0
+ s total=0
+ s total2=0
+ s tmpstr=""
+ s tmpval=0
+ s tmpval2=0
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue 
+	s tmpline=$REPLACE(tmpline," ","")
+	s inputsize=inputsize+1
+	s tmpval=$$eval(tmpline)
+	s total=total+tmpval
+	s tmpval2=$$eval2(tmpline)
+	s total2=total2+tmpval2
+ }
+ d file.Close()
+ 
+ w total,!
+ w total2,!
+
+eval2(input)
+{
+	s input=$REPLACE(input," ","")
+	s size=$L(input)
+	
+	while(1=1)
+	{
+		s tmpin=input
+	for x=1:1:size
+	{
+		s tmpchar=$E(input,x,x)
+		if (tmpchar="+")
+		{
+			s prev=$E(input,x-1,x-1)
+			s next=$E(input,x+1,x+1)
+			s prev2=$E(input,x-2,x-2)
+			s next2=$E(input,x+2,x+2)
+			
+			if ((prev=")") && (next=")")) continue
+			if ((prev="(") && (next=")")) continue
+			if ((prev="(") && (next="(")) continue
+			
+			if (($NUM(prev)=prev) && (next=")")) continue
+			if ((prev="(") && ($NUM(next)=next)) continue
+			
+			if (($NUM(prev)=prev) && ($NUM(next)=next))
+			{
+				if ((prev2="(") && (next2=")")) continue
+				s $E(input,x+1,x+1)=next_")"
+				s $E(input,x-1,x-1)="("_prev
+				s x=0 s size=size+2 continue
+			}	
+			
+			if (($NUM(prev)=prev) && (next="("))
+			{
+				s end=$$jmpto(input,x+1)
+				if ((prev2="(") && ($E(input,end+1,end+1)=")")) continue
+				s end=$$jmpto(input,x+1)
+				s $E(input,end,end)="))"
+				s $E(input,x-1,x-1)="("_prev
+				s x=0 s size=size+2 continue
+			}
+			
+			if ((prev=")") && ($NUM(next)=next))
+			{
+				s start=$$jmptoinv(input,x-1)
+				if ((next2=")") && ($E(input,start-1,start-1)="(") ) continue
+				s $E(input,x+1,x+1)=next_")"
+				s $E(input,start,start)="(("
+				s x=0 s size=size+2 continue
+			}
+			
+			if ((prev=")") && (next="("))
+			{
+				s start=$$jmptoinv(input,x-1)
+				s end=$$jmpto(input,x+1)
+				if (($E(input,start-1,start-1)="(") && ($E(input,end+1,end+1)=")") ) continue
+				s $E(input,end,end)="))"
+				s $E(input,start,start)="(("
+				s x=0 s size=size+2 continue
+			}
+		}
+	}
+	if (tmpin=input) quit
+	s tmpin=input
+	}
+	return $$eval(input)
+}
+
+eval(input,start=1)
+ { 
+	 s size=$L(input) //move this out of the function so we don't repeat it?
+	 
+	 s operator=""
+	 s total=""
+	 
+	 for x=start:1:size
+	 {
+		 s tmpchar=$E(input,x,x) //only works with single digit, could replace with $P
+		 if (tmpchar=" ") continue
+		 if (tmpchar="+") || (tmpchar="*") s operator=tmpchar continue
+		 if (tmpchar=")") return total
+		 
+		 if (tmpchar="(")
+		 {
+			if (total="")
+			{
+				s total=$$eval(input,x+1)
+				s x=$$jmpto(input,x)
+			} 
+			if (operator="+") s total=total+$$eval(input,x+1) s x=$$jmpto(input,x) continue
+			if (operator="*") s total=total*$$eval(input,x+1) s x=$$jmpto(input,x) continue
+		 }
+		 
+		 //should be a number if we got this far
+		 if (total="") s total=tmpchar continue
+		 
+		 if (operator="+") s total=total+tmpchar continue
+		 if (operator="*") s total=total*tmpchar continue
+	 }
+	 return total
+ }
+ 
+jmpto(input,start)
+ {
+	 s size=$L(input)
+	 
+	 if ($E(input,start,start)'="(") return start
+	 
+	 s open=1
+	 
+	 for x=start+1:1:size
+	 {
+		 s tmpchar=$E(input,x,x)
+		 if (tmpchar="(") s open=open+1
+		 if (tmpchar=")") s open=open-1
+		 if (open=0) return x
+	 }
+ }
+ 
+jmptoinv(input,end)
+ {
+	 if ($E(input,end,end)'=")") return end
+	 
+	 s open=1
+	 
+	 for x=end-1:-1:1
+	 {
+		 s tmpchar=$E(input,x,x)
+		 if (tmpchar="(") s open=open-1
+		 if (tmpchar=")") s open=open+1
+		 if (open=0) return x
+	 }
+ }
+ 
