@@ -1,0 +1,163 @@
+
+ s file = ##class(%Library.File).%New( "~/adv21.txt" )
+ s sc = file.Open( "R" ) 
+ 
+ s recordnum=0
+ k recipeallergy
+ k allergyrecipe
+ k recipeing
+ k ingrecipe
+ k ingallergy
+ k allergying
+ 
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	s recordnum=recordnum+1
+	
+	s rawing=$P(tmpline," (",1)
+	s rawing=$REPLACE(rawing," ","|")
+	s rawall=$P(tmpline," (contains",2)
+	s rawall=$REPLACE(rawall," ","")
+	s rawall=$REPLACE(rawall,")","")
+	s rawall=$REPLACE(rawall,",","|")
+	
+	//index ing/recipe
+	s x=1
+	s tmping=$P(rawing,"|",x)
+	while (tmping'="")
+	{
+		s ingallergy(tmping)=""
+		s recipeing(recordnum,tmping)=""
+		s ingrecipe(tmping,recordnum)=""
+		s x=x+1
+		s tmping=$P(rawing,"|",x)
+	}
+	
+	//index recipe/allergy
+	s x=1
+	s tmpall=$P(rawall,"|",x)
+	while (tmpall'="")
+	{
+		//s allergying(tmpall)=""
+		s allergyrecipe(tmpall,recordnum)=""
+		s recipeallergy(recordnum,tmpall)=""
+		s x=x+1
+		s tmpall=$P(rawall,"|",x)
+	}
+ }
+ d file.Close()
+ 
+ //build ingallergy list by looking for union of recipeing and recipeall
+ s allkey=$O(allergyrecipe(""))
+ while (allkey'="")
+ {
+	 k tmpidx
+	 s tmpidx=""
+	 s recipcnt=0
+	 s reckey=$O(allergyrecipe(allkey,""))
+	 while (reckey'="")
+	 {
+		 
+		 s recipcnt=recipcnt+1
+		 s ingkey=$O(recipeing(reckey,""))
+		 while (ingkey'="")
+		 {
+			if ('$D(tmpidx(ingkey)))
+			{
+				s tmpidx(ingkey)=1
+			} 
+			else
+			{
+				s tmpidx(ingkey)=tmpidx(ingkey)+1
+			}
+			
+			s ingkey=$O(recipeing(reckey,ingkey)) 
+		 }
+		 s reckey=$O(allergyrecipe(allkey,reckey))
+	 }
+	 
+	 s tmpkey=$O(tmpidx(""))
+	 while (tmpkey'="")
+	 {
+		 if (tmpidx(tmpkey)=recipcnt)
+		 {
+			s ingallergy(tmpkey,allkey)=""
+			s allergying(allkey,tmpkey)=""
+		 }
+		 s tmpkey=$O(tmpidx(tmpkey))
+	 }
+	 //loop tmpindex, if value = recipcnt, add to new indexes
+	 s allkey=$O(allergyrecipe(allkey))
+ }
+ 
+ k hypoall
+ 
+ s puzzle1=0
+ s puzzle2=""
+ 
+ s ingkey=$O(ingallergy(""))
+ while (ingkey'="")
+ {
+	if ($O(ingallergy(ingkey,""))="")
+	{
+		s hypoall(ingkey)=""
+		
+		s reckey=$O(ingrecipe(ingkey,""))
+		while (reckey'="")
+		{
+			s puzzle1=puzzle1+1
+			s reckey=$O(ingrecipe(ingkey,reckey))
+		}
+	}
+	s ingkey=$O(ingallergy(ingkey))
+ }
+ 
+ //if it has exactly one allergy associated with it
+ //look at all other ing, if they also have it, remove it
+ 
+ s changed=1
+ while (changed'=0)
+ {
+	s changed=0
+ 	s ingkey=$O(ingallergy(""))
+ 	while (ingkey'="")
+ 	{
+	 	s firstall=$O(ingallergy(ingkey,""))
+	 	if (firstall'="")
+	 	{
+		 	s secondall=$O(ingallergy(ingkey,firstall))
+			if (secondall="") //this belongs to me
+		 	{
+			 	s skey=$O(allergying(firstall,""))
+			 	while (skey'="")
+			 	{
+				 	if (skey'=ingkey)
+				 	{
+					 	k allergying(firstall,skey)
+					 	k ingallergy(skey,firstall)
+					 	s changed=1
+				 	}
+				 	s skey=$O(allergying(firstall,skey))
+			 	}
+			}
+		} 
+		s ingkey=$O(ingallergy(ingkey))
+ 	}
+ }
+ 
+ s allkey=$O(allergying(""))
+ while (allkey'="")
+ {
+	 s puzzle2=puzzle2_","_$O(allergying(allkey,""))
+	 s allkey=$O(allergying(allkey))
+ }
+ 
+ s $E(puzzle2,1,1)=""
+ 
+ w puzzle1,!
+ w puzzle2,!
+ 
+ 
