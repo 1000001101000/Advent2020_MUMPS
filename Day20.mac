@@ -1,0 +1,399 @@
+
+ s file = ##class(%Library.File).%New( "~/adv20.txt" )
+ s sc = file.Open( "R" ) 
+ 
+ //a functional mess with little hope of abeing cleaned up
+ 
+ s inputsize=0
+ k records
+ s recordnum=0
+ s linenum=0
+ s tilesize=10
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	
+	if ($FIND(tmpline,":"))
+	{
+		s recordnum=$P(tmpline," ",2)
+		s $E(recordnum,*,*)=""
+		s linenum=1
+		s side4=""
+		s side2=""
+	}
+	else
+	{
+		s records(recordnum,"lines",linenum)=tmpline
+		if (linenum=1)
+		{
+			s records(recordnum,"sides",1)=$$linehash(tmpline)
+		}
+		s side2=side2_$E(tmpline,tilesize,tilesize)
+		s side4=side4_$E(tmpline,1,1)
+		if (linenum=tilesize)
+		{
+			s records(recordnum,"sides",3)=$$linehash(tmpline)
+			s records(recordnum,"sides",2)=$$linehash(side2)
+			s records(recordnum,"sides",4)=$$linehash(side4)
+		}
+		s linenum=linenum+1
+	}
+ }
+ d file.Close()
+ 
+ k normalized
+ k working
+ m working=records
+ 
+ //declare the first one "normal" and shove it into new array
+ s first=$O(working(""))
+ m normalized(first)=working(first)
+ k working(first)
+ 
+ k inrec
+ m inrec=normalized(first)
+ 
+ //keep going until working empty
+ while($O(working(""))'="")
+ {
+	 s changed=0
+	 s key=$O(normalized(""))
+	 while (key'="")
+	 {
+		 s tar1=normalized(key,"sides",1)
+		 s tar2=normalized(key,"sides",2)
+		 s tar3=normalized(key,"sides",3)
+		 s tar4=normalized(key,"sides",4)
+		 s wkey=$O(working(""))
+		 while(wkey'="")
+		 {
+			 k inrec
+			 m inrec=working(wkey)
+			for x=1:1:4
+ 			{
+ 				d yflip()
+ 				if ((outrec("sides",1)=tar3) || (outrec("sides",2)=tar4) || (outrec("sides",3)=tar1) || (outrec("sides",4)=tar2))
+ 				{
+	 				k working(wkey)
+	 				m normalized(wkey)=outrec
+	 				s changed=1
+	 				s wkey=""
+	 				quit
+ 				} 
+ 				k inrec
+ 				m inrec=outrec
+				d xflip()
+				if ((outrec("sides",1)=tar3) || (outrec("sides",2)=tar4) || (outrec("sides",3)=tar1) || (outrec("sides",4)=tar2))
+ 				{
+	 				k working(wkey)
+	 				m normalized(wkey)=outrec
+	 				s changed=1
+	 				s wkey=""
+	 				quit
+ 				}
+ 				k inrec
+ 				m inrec=outrec
+ 				d rotate()
+ 				k inrec
+ 				m inrec=outrec
+ 			}			 	
+			s wkey=$O(working(wkey))
+		 }	 
+		 s key=$O(normalized(key))
+	 }
+ }
+ 
+ m oldrecords=records
+ k records
+ m records=normalized
+ 
+ k inrec,outrec
+ s first=$O(records(""))
+ m inrec=records(first)
+ 
+ //this should all work once normalized.
+ s puzzle1=1
+ s key=$O(records(""))
+ while (key'="")
+ {
+	 s matches=0
+	 for x=1:1:4
+	 {
+		 s searchval=records(key,"sides",x)
+		 s key2=$O(records(""))
+		 while (key2'="")
+		 {
+			 if (key=key2) s key2=$O(records(key2)) continue
+			 for y=1:1:4
+			 {
+				s searchval2=records(key2,"sides",y)
+				if (searchval=searchval2)
+				{
+					s records(key2,"sides",y,"match")=key
+					s records(key,"sides",x,"match")=key2
+					s matches=matches+1
+					quit
+				}		 
+			 }
+			 s key2=$O(records(key2))
+		 }
+	 }
+	 if (matches=2) s puzzle1=puzzle1*key
+	 s key=$O(records(key))
+ }
+ 
+ w puzzle1,!
+ //zw records
+ s origin=""
+ 
+ //lol, iterate the squares to remove the gaps...we don't need them!
+ //figure out our starting corner while at it.
+ s key=$O(records(""))
+ while (key'="")
+ {
+	for x=2:1:tilesize-1
+	{
+		s $E(records(key,"lines",x),tilesize)=""
+		s $E(records(key,"lines",x),1)=""
+	} 	 
+	k records(key,"lines",1)
+	k records(key,"lines",tilesize)
+	
+	if (('$D(records(key,"sides",1,"match"))) && ('$D(records(key,"sides",4,"match")))) s origin=key
+	s key=$O(records(key))
+ }
+ 
+ //zw records
+ k map
+ 
+ s next=origin
+ s linestart=origin
+ s linenum=0
+ 
+ while (next'="")
+ {
+	 for x=2:1:tilesize-1
+	 {
+		 s tmpline=""
+		 //if '$D s ="" blah
+		 if ($D(map("lines",((tilesize-2)*linenum)+(x-1))))
+		 {
+		 	s tmpline=map("lines",(tilesize-2)*linenum+(x-1))
+		 }
+		 else
+		 {
+			 s tmline=""
+		 }
+		 s map("lines",(tilesize-2)*linenum+(x-1))=tmpline_records(next,"lines",x)
+	 }
+	 
+	 if ($D(records(next,"sides",2,"match")))
+	 {
+		 s next=records(next,"sides",2,"match")
+	 }
+	 else
+	 {
+		 if ('$D(records(linestart,"sides",3,"match"))) quit
+		 s next=records(linestart,"sides",3,"match")
+		 s linestart=next
+		 s linenum=linenum+1
+	 }
+ }
+ 
+ 
+ k inrec
+ m inrec=map
+ s mapcount=$$count()
+
+
+ //try them all!
+ //k inrec
+ //m inrec=map
+ //d rotate()
+ //k inrec
+ //m inrec=outrec
+ //d yflip()
+ //k inrec
+ //m inrec=outrec
+ //d xflip()
+ //k map
+ //m map=outrec
+ 
+ s mcount=0
+ 
+ k inrec
+ m inrec=map
+ for x=1:1:4
+ {
+	s mcount=$$monster()
+	if (mcount'=0) quit
+ 	d yflip() 
+ 	k inrec
+ 	m inrec=outrec
+ 	s mcount=$$monster()
+	if (mcount'=0) quit
+	d xflip()
+	k inrec
+ 	m inrec=outrec
+ 	s mcount=$$monster()
+	if (mcount'=0) quit
+ 	d rotate()
+ 	k inrec
+ 	m inrec=outrec
+ }
+ 
+ w mapcount-(15*mcount),!
+ //count the #'s
+ //create a monster finder, should count the monster #s
+ //do the big transforms and, I guess, find the one with monsters
+ //
+
+monster() [inrec]
+{
+	s size=$L(inrec("lines",2))
+	s snklen=20
+	s snkhgt=3
+	s count=0
+	
+	s mask(1)="18"
+	s mask(2)="0|5|6|11|12|17|18|19"
+	s mask(3)="1|4|7|10|13|16"
+	
+	for x=1:1:size-snklen+1
+	{
+		for y=1:1:size-snkhgt+1
+		{
+			s tmplines(1)=inrec("lines",y)
+			s tmplines(2)=inrec("lines",y+1)
+			s tmplines(3)=inrec("lines",y+2)
+			
+			for line=1:1:3
+			{	
+				s fail=0	
+				s num=1
+				s tmpchar=$P(mask(line),"|",num)
+				while(tmpchar'="")
+				{
+					if ($E(tmplines(line),x+tmpchar,x+tmpchar)'="#") s fail=1 quit
+					s num=num+1
+					s tmpchar=$P(mask(line),"|",num)
+				}
+				if (fail=1) quit
+			}
+			if (fail=0) s count=count+1
+		}
+	}
+	return count
+}
+
+count() [inrec]
+{
+	s key=$O(inrec("lines",""))
+	s count=0
+	s len=$L(inrec("lines",2))
+	while (key'="")
+	{
+		for x=1:1:len
+		{
+			if ($E(inrec("lines",key),x,x)="#") s count=count+1
+		}
+		
+		s key=$O(inrec("lines",key))
+	}
+	return count
+}
+
+linehash(input)
+{
+	s result=0
+	s size=$L(input)
+	for x=1:1:size
+	{
+		if ($E(input,x,x)="#") s result=result+$ZPOWER(2,x)
+	}
+	return result
+}
+
+xflip() [inrec,outrec]
+{
+	//reverse every string
+	//recalc hashes? make a function for this ?
+	//zw inrec
+	s key=$O(inrec("lines",""))
+	while (key'="")
+	{
+		s outrec("lines",key)=$REVERSE(inrec("lines",key))
+		s key=$O(inrec("lines",key))
+	}
+	s last=$O(outrec("lines",""),-1)
+	if ($D(inrec("sides")))
+	{
+		s outrec("sides",2)=inrec("sides",4)
+		s outrec("sides",4)=inrec("sides",2)
+		s outrec("sides",1)=$$linehash(outrec("lines",1))
+		s outrec("sides",3)=$$linehash(outrec("lines",last))
+	}
+}
+
+yflip() [inrec,outrec]
+{
+	//just re-order strings
+	//recalc hashes? make a function for this ?
+	//zw inrec
+	s last=$O(inrec("lines",""),-1)
+	s key=$O(inrec("lines",""))
+	s side2=""
+	s side4=""
+	while (key'="")
+	{
+		s tmpline=inrec("lines",last-key+1)
+		s outrec("lines",key)=tmpline
+		s side2=side2_$E(tmpline,*,*)
+		s side4=side4_$E(tmpline,1,1)
+		s key=$O(inrec("lines",key))
+	}
+	s last=$O(outrec("lines",""),-1)
+	if ($D(inrec("sides")))
+	{
+		s outrec("sides",1)=inrec("sides",3)
+		s outrec("sides",3)=inrec("sides",1)
+		s outrec("sides",2)=$$linehash(side2)
+		s outrec("sides",4)=$$linehash(side4)
+	}
+}
+
+rotate() [inrec,outrec]
+{
+	//zw inrec
+	s outrec("lines",5)="          "
+	s last=$O(inrec("lines",""),-1)
+	
+	s key=$O(inrec("lines",""))
+	while (key'="")
+	{
+		s tmpline=inrec("lines",key)
+		for x=1:1:last
+		{
+				s tmpchar=$E(tmpline,x,x)
+				s $E(outrec("lines",x),last-key+1,last-key+1)=tmpchar
+		}
+		s key=$O(inrec("lines",key))
+	}	
+	
+	s side2=""
+	s side4=""
+	
+	for x=1:1:last
+	{
+		s tmpline=outrec("lines",x)
+		s side2=side2_$E(tmpline,last,last)
+		s side4=side4_$E(tmpline,1,1)
+	}
+	
+	s outrec("sides",1)=$$linehash(outrec("lines",1))
+	s outrec("sides",2)=$$linehash(side2)
+	s outrec("sides",3)=$$linehash(outrec("lines",last))
+	s outrec("sides",4)=$$linehash(side4)
+}
