@@ -12,3 +12,5 @@ I have vague ideas about:
 It remains to be seen if I will spend any time on this beyond solving the puzzles each day.
 
 update: rather than go back and make code more readible and standards compliant the quality and readability has started to decline.  
+
+update2: readability continues to deteriorate 
