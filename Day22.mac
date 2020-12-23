@@ -1,0 +1,150 @@
+ 
+ s file = ##class(%Library.File).%New( "~/adv22.txt" )
+ s sc = file.Open( "R" ) 
+ 
+ k players
+ s player=0
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	
+	if ($FIND(tmpline,"Player"))
+	{
+		s player=$REPLACE(tmpline,"Player ","")
+		s player=$REPLACE(player,":","")
+		continue
+	}
+	
+	if ('$D(players(player)))
+	{
+		s players(player)=$LB(tmpline)
+	}
+	else
+	{
+		s players(player)=players(player)_$LB(tmpline)
+	}
+	
+ }
+ d file.Close()
+ 
+ 
+ s input1=players(1)
+ s input2=players(2)
+ 
+ while ($LL(input1) && $LL(input2))
+ {
+	s card1=$LG(input1,1)
+	s $LIST(input1,1,1)=""
+ 	 
+ 	s card2=$LG(input2,1)
+	s $LIST(input2,1,1)=""
+ 		
+ 	if ((card1-0)>(card2-0))
+ 	{
+	 	s input1=input1_$LB(card1)_$LB(card2)
+ 	}
+ 	else
+ 	{
+	 	s input2=input2_$LB(card2)_$LB(card1)
+	}
+ }
+ 
+ if ('$LL(input1))
+ {
+	w $$score(input2),!
+ }
+ else
+ {
+	w $$score(input1),!
+ }
+ 
+ s puzzle2=0
+ s input1=players(1)
+ s input2=players(2)
+
+ d recurse($LTS(input1,"|"),$LTS(input2,"|"))
+ 
+ w puzzle2,!
+ 
+score(input)
+{
+	s output=0
+	s count=$LL(input)
+	
+	for x=1:1:count
+	{
+		s output=output+($LG(input,x)*(count-x+1))
+	}
+	return output
+}
+
+recurse(input1,input2) [puzzle2]
+{
+	s input1=$LFS(input1,"|")
+	s input2=$LFS(input2,"|")
+	
+	while (($LL(input1)'=0) && ($LL(input2)'=0))
+	{
+		s inputcheck=$ZCRC(input1_"R"_input2,7)
+		if $D(history(inputcheck))
+		{
+			return 1
+		}
+	 	s history(inputcheck)=""
+
+		s card1=$LG(input1,1)
+		s $LIST(input1,1,1)=""
+ 	 
+ 		s card2=$LG(input2,1)
+ 		s $LIST(input2,1,1)=""
+ 			
+		if (($LG(input1,card1)="") || ($LG(input2,card2)=""))
+		{
+			if (card1>card2)
+			{
+				s input1=input1_$LB(card1)_$LB(card2)	
+			}
+			else
+			{
+				s input2=input2_$LB(card2)_$LB(card1)
+			}
+		}
+		else
+		{
+			s tmpinput1=""
+			s tmpinput2=""
+			for x=1:1:card1
+			{
+				s tmpinput1=tmpinput1_$LB($LG(input1,x))
+			}
+		
+			for x=1:1:card2
+			{
+				s tmpinput2=tmpinput2_$LB($LG(input2,x))
+			}
+			
+			s finalwin=$$recurse($LTS(tmpinput1,"|"),$LTS(tmpinput2,"|"))
+			if (finalwin=1)
+			{
+				s input1=input1_$LB(card1)_$LB(card2)	
+			}
+			else
+			{
+				s input2=input2_$LB(card2)_$LB(card1)
+			}
+		}
+	}
+	
+	if ($LL(input1)=0)
+ 	{
+	 	s puzzle2=$$score(input2)
+		return 2
+ 	}
+ 	else
+ 	{
+	 	s puzzle2=$$score(input1)
+		return 1
+ 	}	
+}
