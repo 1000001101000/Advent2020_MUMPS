@@ -1,0 +1,138 @@
+
+ s file = ##class(%Library.File).%New( "~/adv24.txt" )
+ s sc = file.Open( "R" ) 
+ 
+ k input,tiles
+ s recordnum=0
+ s xmin=0
+ s ymin=0
+ s xmax=0
+ s ymax=0
+ 
+ while 'file.AtEnd
+ {
+	s tmpline=file.ReadLine()
+	if tmpline="" continue
+	
+	s recordnum=recordnum+1
+	
+	s input(recordnum)=tmpline
+	
+ }
+ d file.Close()
+ 
+ s key=$O(input(""))
+ while (key'="")
+ {
+	s tmpline=input(key)
+	s len=$L(tmpline)
+	 
+	s x=0
+	s y=0
+	 
+	for a=1:1:len
+	{
+		if ($E(tmpline,a,a+1)="ne") s x=x+0.5 s y=y-1 s a=a+1 continue
+		if ($E(tmpline,a,a+1)="se") s x=x+0.5 s y=y+1 s a=a+1 continue
+		if ($E(tmpline,a,a+1)="nw") s x=x-0.5 s y=y-1 s a=a+1 continue
+		if ($E(tmpline,a,a+1)="sw") s x=x-0.5 s y=y+1 s a=a+1 continue
+		if ($E(tmpline,a,a)="e") s x=x+1 continue
+		if ($E(tmpline,a,a)="w") s x=x-1 continue
+	}
+	 
+	if ($D(tiles(y,x)))
+	{
+		if (tiles(y,x)=0)
+		{
+			s tiles(y,x)=1
+		}
+		else
+		{
+			s tiles(y,x)=0
+		}
+	}
+	else
+	{
+		s tiles(y,x)=1
+	}
+	
+	if (y>ymax) s ymax=y
+	if (y<ymin) s ymin=y
+	if (x>xmax) s xmax=x
+	if (x<xmin) s xmin=x
+	
+	s key=$O(input(key))
+ }
+ 
+ w $$tilecount(),!
+ 
+ for day=1:1:100
+ {
+	 s xmax=xmax+1
+	 s xmin=xmin-1
+	 s ymax=ymax+1
+	 s ymin=ymin-1
+	 
+	 for y=ymin:1:ymax
+	 {
+		 //try not to check tiles that couldn't exist
+		 if (y#2'=1)
+		 {
+			 s xfactor=1
+		 }
+		 else
+		 {
+			 s xfactor=0.5
+		 }
+		 
+		for x=xmin:xfactor:xmax
+	 	{
+		 	if ('$D(tiles(y,x)))
+		 	{
+			 	s tmpval=0
+		 	}
+		 	else
+		 	{
+		 		s tmpval=tiles(y,x)
+		 	}
+		
+		 	s adj=0
+		 	
+		 	if ($D(tiles(y,x+1)) && (tiles(y,x+1))=1) s adj=adj+1
+		 	if ($D(tiles(y,x-1)) && (tiles(y,x-1))=1) s adj=adj+1
+		 	if ($D(tiles(y+1,x+0.5)) && (tiles(y+1,x+0.5))=1) s adj=adj+1
+		 	if ($D(tiles(y+1,x-0.5)) && (tiles(y+1,x-0.5))=1) s adj=adj+1
+		 	if ($D(tiles(y-1,x+0.5)) && (tiles(y-1,x+0.5))=1) s adj=adj+1
+		 	if ($D(tiles(y-1,x-0.5)) && (tiles(y-1,x-0.5))=1) s adj=adj+1
+
+		 	if ((tmpval=1) && ((adj=0) || (adj>2))) s tmptiles(y,x)=0
+		 	if ((tmpval=0) && (adj=2)) s tmptiles(y,x)=1
+	 	} 
+	 }
+	
+	m tiles=tmptiles
+	k tmptiles
+	
+ }
+ 
+ w $$tilecount,!
+ 
+ 
+tilecount() [tiles]
+{
+	s count=0
+	s key1=$O(tiles(""))
+ 	while (key1'="")
+ 	{
+		s key2=$O(tiles(key1,""))
+		while (key2'="")
+		{
+			s count=count+tiles(key1,key2)
+		 
+			s key2=$O(tiles(key1,key2))
+		}
+	 
+		s key1=$O(tiles(key1))
+	}
+	return count
+}
