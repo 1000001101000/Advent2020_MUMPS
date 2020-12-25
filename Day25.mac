@@ -1,0 +1,52 @@
+
+ k getkeycache
+ k loopcache
+ s subjectnum = 7
+ 
+ s key1=5764801
+ s key2=17807724
+ 
+ s key1=12578151
+ s key2=5051300
+ 
+ s loop1=$$getloop(7,key1)
+ s loop2=$$getloop(7,key2)
+ 
+ w $$getkey(key2,loop1),!
+ w $$getkey(key1,loop2),!
+ 
+ 
+getkey(subjectnum,loopnum) [getkeycache]
+{
+	if ($D(getkeycache(subjectnum,loopnum))) return getkeycache(subjectnum,loopnum)
+	if ($D(getkeycache(subjectnum,loopnum-1)))
+	{
+		s result=getkeycache(subjectnum,loopnum-1)
+		s xstart=loopnum
+	}
+	else
+	{
+		s result=1
+		s xstart=1
+	}
+	
+	for x=xstart:1:loopnum
+	{
+		s result=result*subjectnum
+		s result=result#20201227
+	}
+	s getkeycache(subjectnum,loopnum)=result
+	return result
+}
+
+getloop(subjectnum,pubkey)
+{
+	s x=0
+	while(1=1)
+	{
+		s x=x+1
+		s tmpkey=$$getkey(subjectnum,x)
+		if (tmpkey=pubkey) quit
+	}
+	return x
+}
